@@ -1,0 +1,15 @@
+stages:
+  - install
+  - build
+
+install_dependencies:
+  stage: install
+  image: node:18
+  script:
+    - npm install
+
+build_project:
+  stage: build
+  image: node:18
+  script:
+    - echo "Build done"
