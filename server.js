@@ -29,12 +29,13 @@ app.post("/api/login", (req, res) => {
 
 // REGISTER API
 app.post("/api/register", (req, res) => {
+  console.log('Register API hit');
   const { email, password } = req.body;
 
   pool.query("SELECT * FROM users WHERE email = ?", [email], (err, results) => {
     if (err) {
       console.error("DB error (register-check):", err);
-      return res.status(500).json({ error: "Database error" });
+      return res.status(500).json({ error: JSON.stringify(err) });
     }
 
     if (results.length > 0) {
