@@ -33,7 +33,7 @@ deploy_to_ec2:
   - echo "$SSH_PRIVATE_KEY" > key.pem
   - chmod 600 key.pem
   - |
-    ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@54.86.57.146 '
+    ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@54.86.57.146 << 'EOF'
       if [ ! -d "express-login-app" ]; then
         git clone https://gitlab.com/anishasivasubramani-group/express-login-app.git
       fi
@@ -48,6 +48,4 @@ deploy_to_ec2:
 
       pm2 delete express-login-app || true
       pm2 start server.js --name express-login-app
-    '
-
-      '
+    EOF
