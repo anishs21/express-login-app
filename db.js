@@ -7,8 +7,18 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   waitForConnections: true,
-  connectionLimit: 10,     // max simultaneous connections
+  connectionLimit: 10,
   queueLimit: 0
+});
+
+// Test connection
+pool.getConnection((err, connection) => {
+  if (err) {
+    console.error("❌ Failed to connect to the database:", err.message);
+  } else {
+    console.log("✅ MySQL pool connected successfully.");
+    connection.release(); // Always release after use
+  }
 });
 
 module.exports = pool;

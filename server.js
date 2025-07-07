@@ -32,42 +32,30 @@ app.post("/api/register", (req, res) => {
   console.log('Register API hit');
   const { email, password } = req.body;
 
-  pool.getConnection((err, connection) => {
+  pool.query("SELECT * FROM users WHERE email = ?", [email], (err, results) => {
     if (err) {
-      console.error("Connection error:", err);
-      return res.status(500).json({ error: "Database connection failed" });
+      console.error("DB error (register-check):", err);
+      return res.status(500).json({ error: JSON.stringify(err) });
     }
 
-    // ✅ Use the 'connection' object from the pool
-    connection.query("SELECT * FROM users WHERE email = ?", [email], (err, results) => {
-      if (err) {
-        connection.release();  // always release
-        console.error("DB error (register-check):", err);
-        return res.status(500).json({ error: "Database error" });
-      }
+    if (results.length > 0) {
+      return res.status(400).json({ error: "Email already registered" });
+    }
 
-      if (results.length > 0) {
-        connection.release();  // always release
-        return res.status(400).json({ error: "Email already registered" });
-      }
-
-      connection.query(
-        "INSERT INTO users (email, password) VALUES (?, ?)",
-        [email, password],
-        (err) => {
-          connection.release();  // always release
-          if (err) {
-            console.error("DB error (insert):", err);
-            return res.status(500).json({ error: "Error saving user" });
-          }
-
-          res.json({ message: "Registered successfully" });
+    pool.query(
+      "INSERT INTO users (email, password) VALUES (?, ?)",
+      [email, password],
+      (err) => {
+        if (err) {
+          console.error("DB error (insert):", err);
+          return res.status(500).json({ error: JSON.stringify(err) });
         }
-      );
-    });
+
+        res.json({ message: "Registered successfully" });
+      }
+    );
   });
 });
-
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => {
