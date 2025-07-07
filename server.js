@@ -32,30 +32,43 @@ app.post("/api/register", (req, res) => {
   console.log('Register API hit');
   const { email, password } = req.body;
 
-  pool.query("SELECT * FROM users WHERE email = ?", [email], (err, results) => {
+  pool.getConnection((err, connection) => {
     if (err) {
-      console.error("DB error (register-check):", err);
-      return res.status(500).json({ error: JSON.stringify(err) })
+      console.error("Connection error:", err);
+      return res.status(500).json({ error: "Database connection failed" });
     }
 
-    if (results.length > 0) {
-      return res.status(400).json({ error: "Email already registered" });
-    }
-
-    pool.query(
-      "INSERT INTO users (email, password) VALUES (?, ?)",
-      [email, password],
-      (err) => {
-        if (err) {
-          console.error("DB error (insert):", err);
-          return res.status(500).json({ error: "Error saving user" });
-        }
-
-        res.json({ message: "Registered successfully" });
+    // Use `connection` instead of `pool`
+    connection.query("SELECT * FROM users WHERE email = ?", [email], (err, results) => {
+      if (err) {
+        connection.release();
+        console.error("DB error (register-check):", err);
+        return res.status(500).json({ error: "Database error (check)" });
       }
-    );
+
+      if (results.length > 0) {
+        connection.release();
+        return res.status(400).json({ error: "Email already registered" });
+      }
+
+      connection.query(
+        "INSERT INTO users (email, password) VALUES (?, ?)",
+        [email, password],
+        (err) => {
+          connection.release(); // Always release the connection
+
+          if (err) {
+            console.error("DB error (insert):", err);
+            return res.status(500).json({ error: "Error saving user" });
+          }
+
+          res.json({ message: "Registered successfully" });
+        }
+      );
+    });
   });
 });
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => {
