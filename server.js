@@ -38,16 +38,16 @@ app.post("/api/register", (req, res) => {
       return res.status(500).json({ error: "Database connection failed" });
     }
 
-    // Use `connection` instead of `pool`
+    // ✅ Use the 'connection' object from the pool
     connection.query("SELECT * FROM users WHERE email = ?", [email], (err, results) => {
       if (err) {
-        connection.release();
+        connection.release();  // always release
         console.error("DB error (register-check):", err);
-        return res.status(500).json({ error: "Database error (check)" });
+        return res.status(500).json({ error: "Database error" });
       }
 
       if (results.length > 0) {
-        connection.release();
+        connection.release();  // always release
         return res.status(400).json({ error: "Email already registered" });
       }
 
@@ -55,8 +55,7 @@ app.post("/api/register", (req, res) => {
         "INSERT INTO users (email, password) VALUES (?, ?)",
         [email, password],
         (err) => {
-          connection.release(); // Always release the connection
-
+          connection.release();  // always release
           if (err) {
             console.error("DB error (insert):", err);
             return res.status(500).json({ error: "Error saving user" });
