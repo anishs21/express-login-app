@@ -35,7 +35,7 @@ app.post("/api/register", (req, res) => {
   pool.query("SELECT * FROM users WHERE email = ?", [email], (err, results) => {
     if (err) {
       console.error("DB error (register-check):", err);
-      return res.status(500).json({ error: JSON.stringify(err) });
+      return res.status(500).json({ error: JSON.stringify(err) })
     }
 
     if (results.length > 0) {
