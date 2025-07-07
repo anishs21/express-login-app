@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -32,9 +32,18 @@ jobs:
           chmod 600 key.pem
 
           ssh -o StrictHostKeyChecking=no -i key.pem $EC2_USER@$EC2_HOST << 'EOF'
-            cd express-login-app || git clone https://github.com/anishs21/express-login-app.git && cd express-login-app
+            if [ ! -d "express-login-app" ]; then
+              git clone https://github.com/anishs21/express-login-app.git
+            fi
+
+            cd express-login-app
+
+            git reset --hard
+            git clean -fd
             git pull origin main
+
             npm install
+
             pm2 delete express-login-app || true
             pm2 start server.js --name express-login-app
           EOF
